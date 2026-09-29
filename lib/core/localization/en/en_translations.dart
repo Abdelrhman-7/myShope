@@ -261,3 +261,4 @@ const Map<String, String> enTranslations = {
   'validation.password_weak': 'Password must be at least 6 characters',
   'validation.password_mismatch': 'Passwords do not match',
 };
+

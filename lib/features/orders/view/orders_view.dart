@@ -77,7 +77,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.xxl),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.08),
+                            color: AppColors.primary.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -158,7 +158,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -181,7 +181,7 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
                 vertical: AppSpacing.xs,
               ),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.12),
+                color: statusColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Text(
@@ -231,3 +231,4 @@ class _OrdersViewState extends ConsumerState<OrdersView> {
     );
   }
 }
+

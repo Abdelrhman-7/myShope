@@ -174,3 +174,4 @@ class CategoriesSection extends ConsumerWidget {
     );
   }
 }
+

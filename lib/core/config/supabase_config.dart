@@ -22,3 +22,4 @@ class SupabaseConfig {
 
 /// Convenience accessor for the Supabase client
 final supabase = SupabaseConfig.client;
+

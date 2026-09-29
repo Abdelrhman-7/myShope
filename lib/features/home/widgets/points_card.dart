@@ -29,7 +29,7 @@ class PointsCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withOpacity(0.35),
+            color: AppColors.primaryDark.withValues(alpha: 0.35),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -40,7 +40,7 @@ class PointsCard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.2),
+              color: AppColors.secondary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(
                 color: AppColors.secondary,
@@ -61,7 +61,7 @@ class PointsCard extends ConsumerWidget {
                 Text(
                   loc.translate('home.your_points'),
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.white.withOpacity(0.85),
+                    color: AppColors.white.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -114,3 +114,4 @@ class PointsCard extends ConsumerWidget {
     );
   }
 }
+

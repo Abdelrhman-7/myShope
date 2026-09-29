@@ -275,8 +275,8 @@ class _ProductDetailsViewState extends ConsumerState<ProductDetailsView> {
                               ),
                               decoration: BoxDecoration(
                                 color: product.inStock
-                                    ? AppColors.inStock.withOpacity(0.12)
-                                    : AppColors.outOfStock.withOpacity(0.12),
+                                    ? AppColors.inStock.withValues(alpha: 0.12)
+                                    : AppColors.outOfStock.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(
                                     AppSpacing.radiusSm),
                               ),
@@ -398,7 +398,7 @@ class _ProductDetailsViewState extends ConsumerState<ProductDetailsView> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 10,
                       offset: const Offset(0, -3),
                     ),
@@ -494,3 +494,4 @@ class _ProductDetailsViewState extends ConsumerState<ProductDetailsView> {
     );
   }
 }
+

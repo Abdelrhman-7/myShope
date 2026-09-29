@@ -30,6 +30,7 @@ class ProfileModel {
 
   bool get isAdmin => role == 'admin';
   bool get isCustomer => role == 'customer';
+  bool get isMerchant => role == 'merchant';
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
@@ -106,3 +107,4 @@ class ProfileModel {
     );
   }
 }
+

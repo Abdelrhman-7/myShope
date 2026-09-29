@@ -51,11 +51,14 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
     try {
       final authService = ref.read(authServiceProvider);
+      final selectedRole = ref.read(userRoleProvider);
+
       await authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
+        role: selectedRole,
       );
 
       if (!mounted) return;
@@ -88,6 +91,8 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedRole = ref.watch(userRoleProvider);
+    final isMerchant = selectedRole == 'merchant';
 
     return Scaffold(
       appBar: AppBar(
@@ -107,6 +112,63 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // ─── Role Banner ─────────────────────────
+                    Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isMerchant ? AppColors.secondary : AppColors.primary)
+                            .withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                        border: Border.all(
+                          color: (isMerchant ? AppColors.secondary : AppColors.primary)
+                              .withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isMerchant
+                                ? Icons.storefront_rounded
+                                : Icons.person_rounded,
+                            color: isMerchant
+                                ? AppColors.secondary
+                                : AppColors.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              isMerchant
+                                  ? 'تسجيل حساب جديد كـ: 🏪 تاجر'
+                                  : 'تسجيل حساب جديد كـ: 👤 عميل عادي',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isMerchant
+                                    ? AppColors.secondaryDark
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () => context.push(AppRouter.roleSelection),
+                            child: const Text('تغيير'),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     // ─── Title ──────────────────────────────
                     Text(
                       context.tr('auth.register'),
@@ -302,3 +364,4 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
     );
   }
 }
+

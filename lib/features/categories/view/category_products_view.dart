@@ -127,3 +127,4 @@ class CategoryProductsView extends ConsumerWidget {
     );
   }
 }
+

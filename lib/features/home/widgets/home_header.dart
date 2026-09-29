@@ -33,7 +33,7 @@ class HomeHeader extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.xs),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.15),
+                      color: AppColors.secondary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: const Icon(
@@ -120,3 +120,4 @@ class HomeHeader extends ConsumerWidget {
     );
   }
 }
+

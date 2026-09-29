@@ -40,6 +40,12 @@ class ProfileNotifier extends StateNotifier<AsyncValue<ProfileModel?>> {
     }
   }
 
+  /// Directly set the profile from an already-fetched [ProfileModel].
+  /// Used by LoginView after fetching the profile to avoid a second DB call.
+  void setProfile(ProfileModel profile) {
+    state = AsyncValue.data(profile);
+  }
+
   void clear() {
     state = const AsyncValue.data(null);
   }
@@ -135,3 +141,32 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
 
 /// Tracks whether the app has finished initial loading
 final appInitializedProvider = StateProvider<bool>((ref) => false);
+
+/// Manages user role preference ('customer' | 'merchant' | 'admin')
+final userRoleProvider = StateNotifierProvider<RoleNotifier, String>(
+  (ref) => RoleNotifier(),
+);
+
+class RoleNotifier extends StateNotifier<String> {
+  RoleNotifier() : super('customer');
+
+  Future<void> initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_role') ?? 'customer';
+    state = role;
+  }
+
+  /// Sets the user role. Accepts 'customer', 'merchant', or 'admin'.
+  Future<void> setRole(String role) async {
+    if (role != 'customer' && role != 'merchant' && role != 'admin') return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_role', role);
+    state = role;
+  }
+
+  bool get isMerchant => state == 'merchant';
+  bool get isCustomer => state == 'customer';
+  bool get isAdmin => state == 'admin';
+}
+
+

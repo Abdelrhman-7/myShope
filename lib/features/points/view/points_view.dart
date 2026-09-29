@@ -67,7 +67,7 @@ class _PointsViewState extends ConsumerState<PointsView> {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryDark.withOpacity(0.35),
+                        color: AppColors.primaryDark.withValues(alpha: 0.35),
                         blurRadius: 15,
                         offset: const Offset(0, 6),
                       ),
@@ -84,7 +84,7 @@ class _PointsViewState extends ConsumerState<PointsView> {
                       Text(
                         loc.translate('home.your_points'),
                         style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.white.withValues(alpha: 0.9),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -179,8 +179,8 @@ class _PointsViewState extends ConsumerState<PointsView> {
                                 padding: const EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
                                   color: tx.isCredit
-                                      ? AppColors.success.withOpacity(0.1)
-                                      : AppColors.error.withOpacity(0.1),
+                                      ? AppColors.success.withValues(alpha: 0.1)
+                                      : AppColors.error.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -247,3 +247,4 @@ class _PointsViewState extends ConsumerState<PointsView> {
     );
   }
 }
+

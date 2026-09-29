@@ -216,3 +216,4 @@ class _ProductsSearchViewState extends ConsumerState<ProductsSearchView> {
     );
   }
 }
+

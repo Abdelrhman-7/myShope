@@ -261,3 +261,4 @@ const Map<String, String> arTranslations = {
   'validation.password_weak': 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
   'validation.password_mismatch': 'كلمة المرور غير متطابقة',
 };
+

@@ -82,7 +82,7 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.xxl),
                           decoration: BoxDecoration(
-                            color: AppColors.favorite.withOpacity(0.08),
+                            color: AppColors.favorite.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -154,3 +154,4 @@ class _FavoritesViewState extends ConsumerState<FavoritesView> {
     );
   }
 }
+

@@ -101,3 +101,4 @@ extension LocalizationExtension on BuildContext {
   bool get isArabic => l10n.isArabic;
   bool get isRtl => l10n.isRtl;
 }
+

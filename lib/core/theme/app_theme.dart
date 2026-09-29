@@ -14,3 +14,4 @@ class AppTheme {
   static ThemeData get light => buildLightTheme();
   static ThemeData get dark => buildDarkTheme();
 }
+

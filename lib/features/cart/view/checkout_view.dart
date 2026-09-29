@@ -137,10 +137,10 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.1),
+                      color: AppColors.secondary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(
-                        color: AppColors.secondary.withOpacity(0.3),
+                        color: AppColors.secondary.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -347,3 +347,4 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     );
   }
 }
+

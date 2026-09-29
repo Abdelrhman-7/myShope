@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/view/login_view.dart';
 import '../../features/auth/view/register_view.dart';
 import '../../features/auth/view/forgot_password_view.dart';
+import '../../features/auth/view/role_selection_view.dart';
 import '../../features/home/view/home_shell.dart';
 import '../../features/home/view/home_view.dart';
 import '../../features/categories/view/categories_view.dart';
@@ -22,6 +23,7 @@ import '../../features/admin/view/admin_products_view.dart';
 import '../../features/admin/view/admin_orders_view.dart';
 import '../../features/admin/view/admin_customers_view.dart';
 import '../../features/splash/view/splash_view.dart';
+import '../../features/merchant/view/merchant_center_view.dart';
 
 /// Centralized routing configuration using GoRouter.
 class AppRouter {
@@ -34,6 +36,7 @@ class AppRouter {
 
   // ─── Route names ──────────────────────────────────────────────
   static const String splash = '/';
+  static const String roleSelection = '/role-selection';
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
@@ -51,9 +54,12 @@ class AppRouter {
   static const String addresses = '/addresses';
   static const String points = '/points';
   static const String admin = '/admin';
+  static const String adminDashboard = '/admin'; // alias used in routing docs
   static const String adminProducts = '/admin/products';
   static const String adminOrders = '/admin/orders';
   static const String adminCustomers = '/admin/customers';
+  static const String merchantCenter = '/merchant';
+  static const String merchantDashboard = '/merchant'; // alias used in routing docs
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -67,6 +73,10 @@ class AppRouter {
       ),
 
       // ─── Auth Routes ───────────────────────────────────
+      GoRoute(
+        path: roleSelection,
+        builder: (context, state) => const RoleSelectionView(),
+      ),
       GoRoute(
         path: login,
         builder: (context, state) => const LoginView(),
@@ -175,6 +185,13 @@ class AppRouter {
         path: adminCustomers,
         builder: (context, state) => const AdminCustomersView(),
       ),
+
+      // ─── Merchant Routes ────────────────────────────────
+      GoRoute(
+        path: merchantCenter,
+        builder: (context, state) => const MerchantCenterView(),
+      ),
     ],
   );
 }
+

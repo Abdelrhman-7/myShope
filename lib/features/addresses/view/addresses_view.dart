@@ -6,7 +6,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/responsive.dart';
 import '../controller/address_controller.dart';
-import '../models/address_model.dart';
 
 class AddressesView extends ConsumerStatefulWidget {
   const AddressesView({super.key});
@@ -243,7 +242,7 @@ class _AddressesViewState extends ConsumerState<AddressesView> {
                                 vertical: AppSpacing.xs,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.12),
+                                color: AppColors.primary.withValues(alpha: 0.12),
                                 borderRadius:
                                     BorderRadius.circular(AppSpacing.radiusSm),
                               ),
@@ -299,3 +298,4 @@ class _AddressesViewState extends ConsumerState<AddressesView> {
     );
   }
 }
+

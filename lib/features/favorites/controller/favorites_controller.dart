@@ -80,3 +80,4 @@ class FavoritesNotifier extends StateNotifier<AsyncValue<List<FavoriteModel>>> {
     }
   }
 }
+

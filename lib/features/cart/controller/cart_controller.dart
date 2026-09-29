@@ -67,6 +67,7 @@ class CartNotifier extends StateNotifier<AsyncValue<List<CartItemModel>>> {
             .single();
 
         final newItem =
+            // ignore: unnecessary_cast
             CartItemModel.fromJson(response as Map<String, dynamic>);
         state = AsyncValue.data([newItem, ...currentItems]);
       }
@@ -133,3 +134,4 @@ class CartNotifier extends StateNotifier<AsyncValue<List<CartItemModel>>> {
     return items.fold(0, (sum, item) => sum + item.quantity);
   }
 }
+

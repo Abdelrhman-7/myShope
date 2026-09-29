@@ -127,3 +127,4 @@ class FeaturedProductsSection extends ConsumerWidget {
     );
   }
 }
+

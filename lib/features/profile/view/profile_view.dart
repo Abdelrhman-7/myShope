@@ -5,6 +5,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/routing/app_router.dart';
 import '../../../core/utils/app_providers.dart';
 import '../../../core/utils/responsive.dart';
 import '../../points/controller/points_controller.dart';
@@ -21,6 +22,9 @@ class ProfileView extends ConsumerWidget {
     final profile = ref.watch(profileProvider).value;
     final points = ref.watch(userPointsBalanceProvider);
     final padding = Responsive.getHorizontalPadding(context);
+
+    final selectedRole = ref.watch(userRoleProvider);
+    final isMerchantRole = selectedRole == 'merchant' || (profile?.isMerchant ?? false);
 
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +49,7 @@ class ProfileView extends ConsumerWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -55,7 +59,7 @@ class ProfileView extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 36,
-                      backgroundColor: AppColors.primary.withOpacity(0.12),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                       child: Text(
                         (profile?.fullName != null &&
                                 profile!.fullName!.isNotEmpty)
@@ -86,25 +90,67 @@ class ProfileView extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                              if (profile?.isAdmin ?? false)
+                              if (profile?.isAdmin ?? false) ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: AppSpacing.sm,
                                     vertical: AppSpacing.xs,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.secondary.withOpacity(0.15),
+                                    color: AppColors.secondary.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(
                                         AppSpacing.radiusSm),
                                   ),
                                   child: Text(
-                                    'ADMIN',
+                                    '🛡️ مسؤول',
                                     style: AppTextStyles.labelSmall.copyWith(
                                       color: AppColors.secondaryDark,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
+                              ] else if (isMerchantRole) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm),
+                                    border: Border.all(
+                                      color: AppColors.secondary.withValues(alpha: 0.4),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '🏪 تاجر',
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: AppColors.secondaryDark,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm),
+                                  ),
+                                  child: Text(
+                                    '👤 عميل',
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                           const SizedBox(height: AppSpacing.xs),
@@ -147,10 +193,10 @@ class ProfileView extends ConsumerWidget {
                     vertical: AppSpacing.md,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.1),
+                    color: AppColors.secondary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     border: Border.all(
-                      color: AppColors.secondary.withOpacity(0.3),
+                      color: AppColors.secondary.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -198,6 +244,108 @@ class ProfileView extends ConsumerWidget {
 
               const SizedBox(height: AppSpacing.xl),
 
+              // ─── Merchant Features Section (Exclusive for Merchant Role) ───
+              if (isMerchantRole) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withValues(alpha: isDark ? 0.12 : 0.06),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(
+                      color: AppColors.secondary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.storefront_rounded,
+                            color: AppColors.secondaryDark,
+                            size: 24,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'مميزات التاجر الإضافية 🏪',
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.secondaryDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'تستمتع بتجربة العميل الكاملة + مميزات الجملة التالية:',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        childAspectRatio: 2.2,
+                        crossAxisSpacing: AppSpacing.sm,
+                        mainAxisSpacing: AppSpacing.sm,
+                        children: [
+                          _buildMerchantFeatureCard(
+                            context,
+                            isDark: isDark,
+                            icon: Icons.inventory_2_outlined,
+                            title: 'طلب كميات جملة',
+                            subtitle: 'خصم 15% إضافي',
+                            onTap: () => _showMerchantWholesaleDialog(context),
+                          ),
+                          _buildMerchantFeatureCard(
+                            context,
+                            isDark: isDark,
+                            icon: Icons.sell_outlined,
+                            title: 'حسومات التجار',
+                            subtitle: 'كتالوج بالجملة',
+                            onTap: () => _showMerchantDiscountsDialog(context),
+                          ),
+                          _buildMerchantFeatureCard(
+                            context,
+                            isDark: isDark,
+                            icon: Icons.analytics_outlined,
+                            title: 'إحصائيات التاجر',
+                            subtitle: 'ملخص الشراء',
+                            onTap: () => _showMerchantAnalyticsDialog(context),
+                          ),
+                          _buildMerchantFeatureCard(
+                            context,
+                            isDark: isDark,
+                            icon: Icons.contact_support_outlined,
+                            title: 'دعم تجار فوري',
+                            subtitle: 'مباشر 24/7',
+                            onTap: () => _showMerchantSupportDialog(context),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Merchant Center quick link
+              if (isMerchantRole) ...[
+                _buildMenuItem(
+                  context,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  icon: Icons.storefront_rounded,
+                  title: 'مركز التاجر 🏪',
+                  iconColor: AppColors.secondaryDark,
+                  onTap: () => context.push(AppRouter.merchantCenter),
+                ),
+              ],
+
               // ─── Menu Options ─────────────────────────────
               _buildMenuItem(
                 context,
@@ -216,7 +364,34 @@ class ProfileView extends ConsumerWidget {
                 onTap: () => context.push('/addresses'),
               ),
 
-              // Admin Panel link (ONLY visible if admin)
+              // Role Selector Item
+              _buildActionItem(
+                context,
+                isDark: isDark,
+                icon: isMerchantRole
+                    ? Icons.storefront_rounded
+                    : Icons.person_rounded,
+                title: 'نوع الحساب الحالي',
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isMerchantRole ? '🏪 تاجر' : '👤 عميل عادي',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: isMerchantRole
+                            ? AppColors.secondaryDark
+                            : AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(Icons.swap_horiz_rounded, size: 18),
+                  ],
+                ),
+                onTap: () => context.push(AppRouter.roleSelection),
+              ),
+
+              // Admin Panel link (ONLY visible if admin in backend)
               if (profile?.isAdmin ?? false)
                 _buildMenuItem(
                   context,
@@ -394,4 +569,197 @@ class ProfileView extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildMerchantFeatureCard(
+    BuildContext context, {
+    required bool isDark,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: AppColors.secondary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Icon(icon, color: AppColors.secondaryDark, size: 20),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontSize: 10,
+                      color: AppColors.secondaryDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMerchantWholesaleDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, color: AppColors.secondaryDark),
+            SizedBox(width: 8),
+            Text('📦 طلب الكميات والجملة'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ميزة خاصة بحساب التاجر 🏪\n\n'
+              '• خصم تلقائي 15% على كافة طلبيات الجملة.\n'
+              '• إمكانية تحديد كميات مخصصة للورَش والمحلات.\n'
+              '• أولوية والشحن السريع لطلبات التجار.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMerchantDiscountsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.sell_outlined, color: AppColors.secondaryDark),
+            SizedBox(width: 8),
+            Text('🏷️ أسعار وحسومات التجار'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'كتالوج أسعار الجملة مفعل للتاجر!\n\n'
+              '• يظهر خصم التاجر مباشرة في المنتجات والسلة.\n'
+              '• شارة خصم التاجر مفعّلة في تصفح الأدوات الكهربائية.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMerchantAnalyticsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.analytics_outlined, color: AppColors.secondaryDark),
+            SizedBox(width: 8),
+            Text('📊 إحصائيات التاجر'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ملخص مشتريات التاجر:\n\n'
+              '• إجمالي الوفر المالي للتاجر: 15% عروض جارية.\n'
+              '• التقرير الشهري لمشتريات الأجهزة والأدوات.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('تم'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMerchantSupportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.contact_support_outlined, color: AppColors.secondaryDark),
+            SizedBox(width: 8),
+            Text('📞 دعم التجار المباشر'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'خدمة خاصة بالتجار:\n\n'
+              '• خط مباشر ومسؤول مبيعات مخصص للتجار.\n'
+              '• للتواصل المباشر عبر واتساب أو الهاتف.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('موافق'),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

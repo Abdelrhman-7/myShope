@@ -40,3 +40,4 @@ class AppSpacing {
   static const int desktopGridColumns = 4;
   static const int desktopWideGridColumns = 5;
 }
+

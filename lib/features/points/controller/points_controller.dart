@@ -50,3 +50,4 @@ final userPointsBalanceProvider = Provider<int>((ref) {
     return sum + tx.points;
   });
 });
+

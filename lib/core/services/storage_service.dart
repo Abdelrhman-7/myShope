@@ -81,3 +81,4 @@ class StorageService {
     return _client.storage.from(bucket).getPublicUrl(path);
   }
 }
+

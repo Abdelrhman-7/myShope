@@ -7,14 +7,17 @@ import 'core/routing/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_providers.dart';
 
+import 'core/utils/app_logger.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Supabase client
   try {
     await SupabaseConfig.initialize();
-  } catch (e) {
-    debugPrint('Supabase initialization error: $e');
+    AppLogger.info('Supabase initialized successfully', tag: 'BOOT');
+  } catch (e, st) {
+    AppLogger.error('Supabase initialization error', error: e, stackTrace: st, location: 'main.dart');
   }
 
   runApp(
@@ -71,3 +74,4 @@ class _ElectricalStoreAppState extends ConsumerState<ElectricalStoreApp> {
     );
   }
 }
+

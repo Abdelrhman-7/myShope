@@ -79,3 +79,4 @@ class AddressesNotifier extends StateNotifier<AsyncValue<List<AddressModel>>> {
     }
   }
 }
+

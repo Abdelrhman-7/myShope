@@ -8,8 +8,10 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/utils/app_providers.dart';
 import '../../../core/routing/app_router.dart';
+import '../../../core/utils/app_logger.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Login screen
 class LoginView extends ConsumerStatefulWidget {
@@ -39,6 +41,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   Future<void> _handleLogin() async {
     // Validate form
     if (!_formKey.currentState!.validate()) {
+      AppLogger.warning('Login form validation failed', tag: 'FORM');
       return;
     }
 
@@ -47,102 +50,162 @@ class _LoginViewState extends ConsumerState<LoginView> {
       _errorMessage = null;
     });
 
+    final loginStopwatch = Stopwatch()..start();
+
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
 
-      // Debug
-      debugPrint('==============================');
-      debugPrint('LOGIN START');
-      debugPrint('LOGIN EMAIL: $email');
-      debugPrint('LOGIN PASSWORD LENGTH: ${password.length}');
-      debugPrint('==============================');
+      AppLogger.auth(
+        'LOGIN START',
+        email: email,
+        data: {'password': password}, // Redacted automatically
+      );
 
       final authService = ref.read(authServiceProvider);
 
       // =========================
-      // SUPABASE LOGIN
+      // 1. SUPABASE LOGIN
       // =========================
+      AppLogger.info('Sending Supabase authentication request...', tag: 'AUTH');
       await authService.signIn(email: email, password: password);
 
-      debugPrint('LOGIN SUCCESS');
-      debugPrint('Supabase authentication succeeded');
+      // =========================
+      // 2. LOAD PROFILE FROM public.profiles
+      // Role is ALWAYS determined from the database, never from UI state
+      // or SharedPreferences, to prevent routing to wrong dashboard.
+      // =========================
+      AppLogger.info(
+        'Querying role from public.profiles WHERE id = user.id ...',
+        tag: 'PROFILE',
+      );
+      final profile = await authService.getProfile();
+
+      loginStopwatch.stop();
+
+      if (!mounted) return;
 
       // =========================
-      // LOAD PROFILE
+      // 3. INACTIVE ACCOUNT CHECK
       // =========================
-      debugPrint('LOADING PROFILE...');
-
-      await ref.read(profileProvider.notifier).loadProfile();
-
-      debugPrint('PROFILE LOAD FINISHED');
-
-      final profileState = ref.read(profileProvider);
-
-      debugPrint('PROFILE STATE: $profileState');
-
-      if (!mounted) {
-        return;
+      if (profile != null && !profile.isActive) {
+        await authService.signOut();
+        throw Exception('الحساب غير مفعّل. يرجى التواصل مع الدعم.');
       }
 
       // =========================
-      // HANDLE PROFILE
+      // 4. DETERMINE TARGET ROUTE BASED ON ROLE FROM DB
       // =========================
-      profileState.when(
-        data: (profile) {
-          debugPrint('PROFILE DATA: $profile');
+      if (profile == null) {
+        await authService.signOut();
+        throw Exception('لم يتم العثور على حساب مرتبط في قاعدة البيانات.');
+      }
 
-          if (profile != null) {
-            debugPrint('CUSTOMER TYPE ID: ${profile.customerTypeId}');
+      final role = profile.role;
+      if (role.isEmpty || (role != 'admin' && role != 'merchant' && role != 'customer')) {
+        await authService.signOut();
+        throw Exception('صلاحية الحساب غير معروفة أو غير صالحة: $role');
+      }
 
-            if (profile.customerTypeId != null) {
-              ref
-                  .read(customerTypeProvider.notifier)
-                  .loadCustomerType(profile.customerTypeId!);
-            }
-          } else {
-            debugPrint('WARNING: PROFILE IS NULL');
-          }
+      final isActive = profile.isActive;
 
-          // =========================
-          // GO HOME
-          // =========================
-          debugPrint('GOING TO HOME');
+      // --- ADMIN RPC TEST ---
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
 
-          context.go(AppRouter.home);
-        },
+      // ignore: avoid_print
+      print('\n================ ADMIN TEST ================');
+      // ignore: avoid_print
+      print('USER ID: ${user?.id}');
+      // ignore: avoid_print
+      print('EMAIL: ${user?.email}');
+      
+      try {
+        final result = await client.rpc('is_admin');
+        // ignore: avoid_print
+        print('IS ADMIN RPC RESULT: $result');
+      } catch(e) {
+        // ignore: avoid_print
+        print('IS ADMIN RPC ERROR: $e');
+      }
+      // ignore: avoid_print
+      print('=============================================\n');
+      // ----------------------
 
-        loading: () {
-          debugPrint('PROFILE IS STILL LOADING');
-        },
+      String targetRoute;
+      switch (role) {
+        case 'admin':
+          targetRoute = AppRouter.admin;
+          break;
+        case 'merchant':
+          targetRoute = AppRouter.merchantCenter;
+          break;
+        case 'customer':
+          targetRoute = AppRouter.home;
+          break;
+        default:
+          throw Exception('صلاحية الحساب غير مدعومة.');
+      }
 
-        error: (error, stackTrace) {
-          debugPrint('==============================');
-          debugPrint('PROFILE ERROR');
-          debugPrint('ERROR: $error');
-          debugPrint('STACK TRACE: $stackTrace');
-          debugPrint('==============================');
-
-          if (mounted) {
-            setState(() {
-              _errorMessage = 'Profile Error:\n$error';
-            });
-          }
-        },
+      // =========================
+      // 5. PRETTY LOGIN SUCCESS LOGGER
+      // =========================
+      AppLogger.success(
+        '════════════════════════════════════════\n'
+        '  LOGIN SUCCESS\n'
+        '  Email       : $email\n'
+        '  User ID     : ${profile?.id ?? "unknown"}\n'
+        '  Role        : $role\n'
+        '  Active      : $isActive\n'
+        '  Target Route: $targetRoute\n'
+        '════════════════════════════════════════',
+        tag: 'LOGIN',
       );
+
+      AppLogger.auth(
+        'LOGIN SUCCESS',
+        email: email,
+        userId: profile?.id,
+        role: role,
+        route: targetRoute,
+        duration: loginStopwatch.elapsed,
+      );
+
+      // =========================
+      // 6. SYNC PROVIDERS & NAVIGATE
+      // =========================
+      if (profile != null) {
+        // Update profileProvider with the loaded profile
+        ref.read(profileProvider.notifier).setProfile(profile);
+
+        // Sync userRoleProvider from actual DB role (not UI selection)
+        if (profile.role.isNotEmpty) {
+          ref.read(userRoleProvider.notifier).setRole(profile.role);
+        }
+
+      }
+
+      AppLogger.navigation(
+        from: AppRouter.login,
+        to: targetRoute,
+        role: role,
+      );
+
+      if (!mounted) return;
+      context.go(targetRoute);
     } catch (e, stackTrace) {
-      // =========================
-      // LOGIN ERROR
-      // =========================
-      debugPrint('==============================');
-      debugPrint('LOGIN ERROR');
-      debugPrint('ERROR: $e');
-      debugPrint('STACK TRACE: $stackTrace');
-      debugPrint('==============================');
+      loginStopwatch.stop();
+
+      AppLogger.error(
+        'LOGIN ERROR',
+        error: e,
+        stackTrace: stackTrace,
+        location: 'LoginView._handleLogin',
+        data: {'email': _emailController.text.trim()},
+      );
 
       if (mounted) {
         setState(() {
-          // Show the REAL error
           _errorMessage = e.toString();
         });
       }
@@ -158,6 +221,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedRole = ref.watch(userRoleProvider);
+    final isMerchant = selectedRole == 'merchant';
 
     return Scaffold(
       body: SafeArea(
@@ -172,6 +237,65 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // =========================
+                    // ROLE BANNER
+                    // =========================
+                    Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isMerchant ? AppColors.secondary : AppColors.primary)
+                            .withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                        border: Border.all(
+                          color: (isMerchant ? AppColors.secondary : AppColors.primary)
+                              .withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isMerchant
+                                ? Icons.storefront_rounded
+                                : Icons.person_rounded,
+                            color: isMerchant
+                                ? AppColors.secondary
+                                : AppColors.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              isMerchant
+                                  ? 'الدخول كـ: 🏪 تاجر'
+                                  : 'الدخول كـ: 👤 عميل عادي',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isMerchant
+                                    ? AppColors.secondaryDark
+                                    : AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () => context.push(AppRouter.roleSelection),
+                            child: const Text('تغيير'),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     // =========================
                     // LOGO
                     // =========================
@@ -382,3 +506,4 @@ class _LoginViewState extends ConsumerState<LoginView> {
     );
   }
 }
+

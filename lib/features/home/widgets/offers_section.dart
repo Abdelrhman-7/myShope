@@ -127,3 +127,4 @@ class OffersSection extends ConsumerWidget {
     );
   }
 }
+

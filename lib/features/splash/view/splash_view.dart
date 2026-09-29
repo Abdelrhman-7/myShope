@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_providers.dart';
 import '../../../core/routing/app_router.dart';
+import '../../../core/utils/app_logger.dart';
 
 /// Splash screen — checks session and routes accordingly.
 class SplashView extends ConsumerStatefulWidget {
@@ -40,47 +41,98 @@ class _SplashViewState extends ConsumerState<SplashView>
   }
 
   Future<void> _initializeApp() async {
-    // Initialize locale and theme from preferences
-    await ref.read(localeProvider.notifier).initialize();
-    await ref.read(themeModeProvider.notifier).initialize();
+    try {
+      AppLogger.info('Initializing app preferences...', tag: 'SPLASH');
 
-    // Wait for splash animation
-    await Future.delayed(const Duration(seconds: 2));
+      // Initialize preferences safely with timeout
+      await Future.wait([
+        ref.read(localeProvider.notifier).initialize(),
+        ref.read(themeModeProvider.notifier).initialize(),
+        ref.read(userRoleProvider.notifier).initialize(),
+      ]).timeout(const Duration(seconds: 2), onTimeout: () => []);
 
-    if (!mounted) return;
+      // Minimum splash delay
+      await Future.delayed(const Duration(milliseconds: 1500));
 
-    final authService = ref.read(authServiceProvider);
+      if (!mounted) return;
 
-    if (authService.isAuthenticated) {
-      // Load profile and navigate
-      await ref.read(profileProvider.notifier).loadProfile();
-      final profileState = ref.read(profileProvider);
+      final authService = ref.read(authServiceProvider);
 
-      profileState.when(
-        data: (profile) {
-          if (profile != null) {
-            // Load customer type if exists
-            if (profile.customerTypeId != null) {
-              ref
-                  .read(customerTypeProvider.notifier)
-                  .loadCustomerType(profile.customerTypeId!);
-            }
+      AppLogger.auth('SESSION CHECK');
 
-            if (profile.isAdmin) {
-              // TODO: Navigate to admin dashboard when implemented
-              context.go(AppRouter.home);
-            } else {
-              context.go(AppRouter.home);
-            }
-          } else {
-            context.go(AppRouter.login);
+      if (authService.isAuthenticated) {
+        final currentUser = authService.currentUser;
+        AppLogger.auth(
+          'SESSION FOUND',
+          userId: currentUser?.id,
+          email: currentUser?.email,
+        );
+
+        try {
+          await ref
+              .read(profileProvider.notifier)
+              .loadProfile()
+              .timeout(const Duration(seconds: 3));
+        } catch (e) {
+          AppLogger.warning('Profile loading timed out on splash', tag: 'SPLASH');
+        }
+
+        if (!mounted) return;
+
+        final profile = ref.read(profileProvider).value;
+        if (profile != null) {
+          if (profile.role.isNotEmpty) {
+            ref.read(userRoleProvider.notifier).setRole(profile.role);
           }
-        },
-        loading: () => context.go(AppRouter.login),
-        error: (_, __) => context.go(AppRouter.login),
+
+          // Route based on role
+          if (profile.isAdmin) {
+            AppLogger.navigation(
+              from: AppRouter.splash,
+              to: AppRouter.admin,
+              role: 'admin',
+            );
+            context.go(AppRouter.admin);
+            return;
+          }
+          if (profile.isMerchant) {
+            AppLogger.navigation(
+              from: AppRouter.splash,
+              to: AppRouter.merchantCenter,
+              role: 'merchant',
+            );
+            context.go(AppRouter.merchantCenter);
+            return;
+          }
+
+          // Default: customer
+          AppLogger.navigation(
+            from: AppRouter.splash,
+            to: AppRouter.home,
+            role: 'customer',
+          );
+          context.go(AppRouter.home);
+          return;
+        }
+      } else {
+        AppLogger.auth('SESSION NOT FOUND');
+      }
+
+      AppLogger.navigation(
+        from: AppRouter.splash,
+        to: AppRouter.roleSelection,
       );
-    } else {
-      context.go(AppRouter.login);
+      context.go(AppRouter.roleSelection);
+    } catch (e, st) {
+      AppLogger.error(
+        'Splash initialization failed',
+        error: e,
+        stackTrace: st,
+        location: 'SplashView._initializeApp',
+      );
+      if (mounted) {
+        context.go(AppRouter.roleSelection);
+      }
     }
   }
 
@@ -175,3 +227,4 @@ class _SplashViewState extends ConsumerState<SplashView>
     );
   }
 }
+

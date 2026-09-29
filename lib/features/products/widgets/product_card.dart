@@ -28,6 +28,10 @@ class ProductCard extends ConsumerWidget {
     final isArabic = locale.languageCode == 'ar';
     final name = isArabic ? product.nameAr : product.nameEn;
 
+    final selectedRole = ref.watch(userRoleProvider);
+    final profile = ref.watch(profileProvider).value;
+    final isMerchantRole = selectedRole == 'merchant' || (profile?.isMerchant ?? false);
+
     final favorites = ref.watch(favoritesProvider);
     final isFav = favorites.maybeWhen(
       data: (list) => list.any((f) => f.productId == product.id),
@@ -45,7 +49,7 @@ class ProductCard extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -124,12 +128,39 @@ class ProductCard extends ConsumerWidget {
                       ),
                     ),
 
+                  // Merchant Wholesale Badge
+                  if (isMerchantRole)
+                    Positioned(
+                      bottom: AppSpacing.sm,
+                      left: isArabic ? AppSpacing.sm : null,
+                      right: isArabic ? null : AppSpacing.sm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs + 2,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryDark,
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Text(
+                          'سعر تاجر 🏪',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // Out of stock overlay
                   if (!product.inStock)
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(AppSpacing.radiusMd),
                           ),
@@ -274,3 +305,4 @@ class ProductCard extends ConsumerWidget {
     );
   }
 }
+

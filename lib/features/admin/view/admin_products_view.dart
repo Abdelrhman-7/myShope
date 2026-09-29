@@ -75,7 +75,7 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusSm),
                         ),
@@ -124,3 +124,4 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
     );
   }
 }
+
