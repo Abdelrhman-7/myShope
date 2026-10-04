@@ -103,30 +103,24 @@ class HomeFeaturedProductsNotifier
   Future<void> loadFeaturedProducts() async {
     try {
       state = const AsyncValue.loading();
-      print('=== HOME FEATURED: LOAD START ===');
 
-      // Query products table directly from Supabase
+      // Query ONLY featured + active products from Supabase
+      // Never fall back to showing all products — that would mislead users
       final response = await SupabaseConfig.client
           .from('products')
           .select('*')
+          .eq('is_featured', true)
+          .eq('is_active', true)
           .order('created_at', ascending: false);
 
       final rawList = response as List;
-      print('=== HOME FEATURED: RECEIVED COUNT=${rawList.length} ===');
 
-      final allProducts = rawList
+      final featuredProducts = rawList
           .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
-          .where((p) => p.isActive)
           .toList();
 
-      // If featured products exist, show them; otherwise show all active products so the user sees their database items
-      final featured = allProducts.where((p) => p.isFeatured).toList();
-      final productsToShow = featured.isNotEmpty ? featured : allProducts;
-
-      state = AsyncValue.data(productsToShow);
-      print('=== HOME FEATURED: LOAD SUCCESS count=${productsToShow.length} ===');
+      state = AsyncValue.data(featuredProducts);
     } catch (e, st) {
-      print('=== HOME FEATURED: LOAD ERROR: $e | type=${e.runtimeType} ===');
       state = AsyncValue.error(e, st);
     }
   }

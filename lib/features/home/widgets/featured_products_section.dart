@@ -25,6 +25,12 @@ class FeaturedProductsSection extends ConsumerWidget {
     final isArabic = locale.languageCode == 'ar';
     final productsState = ref.watch(homeFeaturedProductsProvider);
 
+    // Hide the entire section if no featured products exist
+    final products = productsState.value;
+    if (productsState is AsyncData && (products == null || products.isEmpty)) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -87,25 +93,10 @@ class FeaturedProductsSection extends ConsumerWidget {
             loading: () => const Center(
               child: CircularProgressIndicator.adaptive(),
             ),
-            error: (error, _) => Center(
-              child: Text(
-                loc.translate('common.error'),
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
-              ),
-            ),
+            error: (error, _) => const SizedBox.shrink(),
             data: (products) {
-              if (products.isEmpty) {
-                return Center(
-                  child: Text(
-                    loc.translate('common.no_data'),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                );
-              }
+              // Already handled above, but guard here too
+              if (products.isEmpty) return const SizedBox.shrink();
 
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
