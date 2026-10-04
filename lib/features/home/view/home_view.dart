@@ -11,7 +11,9 @@ import '../widgets/categories_section.dart';
 import '../widgets/featured_products_section.dart';
 import '../widgets/offers_section.dart';
 import '../widgets/points_card.dart';
+import '../widgets/ads_section.dart';
 import '../controller/home_controller.dart';
+import '../../products/controller/product_controller.dart';
 
 /// Home page view
 class HomeView extends ConsumerStatefulWidget {
@@ -27,6 +29,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
     super.initState();
     // Load home data
     Future.microtask(() {
+      ref.read(productsProvider.notifier).loadProducts();
+      ref.read(homeAdsProvider.notifier).loadAds();
       ref.read(homeCategoriesProvider.notifier).loadCategories();
       ref.read(homeFeaturedProductsProvider.notifier).loadFeaturedProducts();
       ref.read(homeOffersProvider.notifier).loadOffers();
@@ -44,6 +48,8 @@ class _HomeViewState extends ConsumerState<HomeView> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
+            await ref.read(productsProvider.notifier).loadProducts();
+            await ref.read(homeAdsProvider.notifier).loadAds();
             await ref
                 .read(homeCategoriesProvider.notifier)
                 .loadCategories();
@@ -153,6 +159,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
                     child: const PointsCard(),
                   ),
                 ),
+
+              // ─── Ads ─────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.lg),
+                  child: AdsSection(horizontalPadding: padding),
+                ),
+              ),
 
               // ─── Categories ──────────────────────────────
               SliverToBoxAdapter(

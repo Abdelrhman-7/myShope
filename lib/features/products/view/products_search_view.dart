@@ -32,10 +32,9 @@ class _ProductsSearchViewState extends ConsumerState<ProductsSearchView> {
   Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
     try {
-      final response = await supabase
+      final response = await SupabaseConfig.client
           .from('products')
-          .select()
-          .eq('is_active', true)
+          .select('*')
           .order('created_at', ascending: false);
 
       final list = (response as List)

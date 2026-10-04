@@ -11,11 +11,14 @@ import '../../products/widgets/product_card.dart';
 
 final categoryProductsFutureProvider =
     FutureProvider.family<List<ProductModel>, String>((ref, categoryId) async {
-  final response = await supabase
+  // category_id in products table is bigint (int), parse from URL String
+  final categoryIdInt = int.tryParse(categoryId);
+  if (categoryIdInt == null) return [];
+
+  final response = await SupabaseConfig.client
       .from('products')
-      .select()
-      .eq('category_id', categoryId)
-      .eq('is_active', true)
+      .select('*')
+      .eq('category_id', categoryIdInt)
       .order('created_at', ascending: false);
 
   return (response as List)

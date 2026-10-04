@@ -211,6 +211,8 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                               _changeRole(context, ref, c, newRole),
                           onToggleActive: () =>
                               _toggleActive(context, ref, c),
+                          onDelete: () =>
+                              _deleteCustomer(context, ref, c),
                         );
                       },
                     );
@@ -301,6 +303,56 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
       );
     }
   }
+
+  Future<void> _deleteCustomer(
+    BuildContext context,
+    WidgetRef ref,
+    ProfileModel customer,
+  ) async {
+    if (!_isAdmin(ref)) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد حذف الحساب'),
+        content: Text(
+          'هل أنت متأكد من حذف الحساب "${customer.fullName ?? customer.email}" بشكل نهائي؟\n\n'
+          'تنبيه: سيتم حذف البيانات المرتبطة بناءً على قيود قاعدة البيانات الحالية (Foreign Keys).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('حذف نهائي'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    final success = await ref
+        .read(adminCustomersProvider.notifier)
+        .deleteCustomer(customer.id);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? 'تم حذف الحساب بنجاح' : 'فشل الحذف، راجع القيود المرتبطة بالحساب',
+          ),
+          backgroundColor: success ? AppColors.success : AppColors.error,
+        ),
+      );
+    }
+  }
 }
 
 // ─── Customer Tile ────────────────────────────────────────────────────────
@@ -310,6 +362,7 @@ class _CustomerTile extends StatelessWidget {
   final bool isAdmin;
   final void Function(String newRole) onRoleChange;
   final VoidCallback onToggleActive;
+  final VoidCallback onDelete;
 
   const _CustomerTile({
     required this.customer,
@@ -317,6 +370,7 @@ class _CustomerTile extends StatelessWidget {
     required this.isAdmin,
     required this.onRoleChange,
     required this.onToggleActive,
+    required this.onDelete,
   });
 
   Color get _roleColor {
@@ -467,6 +521,14 @@ class _CustomerTile extends StatelessWidget {
                       },
                     ),
                     const Spacer(),
+
+                    // Delete
+                    IconButton(
+                      icon: const Icon(Icons.delete_rounded, size: 20, color: AppColors.error),
+                      onPressed: onDelete,
+                      tooltip: 'حذف',
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
 
                     // Active toggle
                     Text(

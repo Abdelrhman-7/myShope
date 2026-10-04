@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/routing/app_router.dart';
+import '../../cart/controller/cart_controller.dart';
 
-/// Main shell with bottom navigation bar
-class HomeShell extends StatelessWidget {
+/// Main shell with bottom navigation bar & cart badge
+class HomeShell extends ConsumerWidget {
   final Widget child;
 
   const HomeShell({super.key, required this.child});
@@ -41,8 +43,13 @@ class HomeShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _calculateSelectedIndex(context);
+    final cartState = ref.watch(cartProvider);
+    final cartCount = cartState.maybeWhen(
+      data: (items) => items.fold(0, (sum, i) => sum + i.quantity),
+      orElse: () => 0,
+    );
 
     return Scaffold(
       body: child,
@@ -71,8 +78,16 @@ class HomeShell extends StatelessWidget {
               label: context.tr('nav.categories'),
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.shopping_cart_outlined),
-              activeIcon: const Icon(Icons.shopping_cart_rounded),
+              icon: Badge(
+                isLabelVisible: cartCount > 0,
+                label: Text('$cartCount'),
+                child: const Icon(Icons.shopping_cart_outlined),
+              ),
+              activeIcon: Badge(
+                isLabelVisible: cartCount > 0,
+                label: Text('$cartCount'),
+                child: const Icon(Icons.shopping_cart_rounded),
+              ),
               label: context.tr('nav.cart'),
             ),
             BottomNavigationBarItem(
@@ -91,4 +106,3 @@ class HomeShell extends StatelessWidget {
     );
   }
 }
-

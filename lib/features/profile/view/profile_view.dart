@@ -515,26 +515,31 @@ class ProfileView extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
         ),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: iconColor ?? AppColors.primary),
-        title: Text(
-          title,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd - 1),
+        child: Material(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          child: ListTile(
+            leading: Icon(icon, color: iconColor ?? AppColors.primary),
+            title: Text(
+              title,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            trailing: Icon(
+              isArabic ? Icons.arrow_back_ios_new : Icons.arrow_forward_ios,
+              size: 14,
+              color: AppColors.grey500,
+            ),
+            onTap: onTap,
           ),
         ),
-        trailing: Icon(
-          isArabic ? Icons.arrow_back_ios_new : Icons.arrow_forward_ios,
-          size: 14,
-          color: AppColors.grey500,
-        ),
-        onTap: onTap,
       ),
     );
   }
@@ -550,22 +555,27 @@ class ProfileView extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
         ),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
-        title: Text(
-          title,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd - 1),
+        child: Material(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          child: ListTile(
+            leading: Icon(icon, color: AppColors.primary),
+            title: Text(
+              title,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            trailing: trailing,
+            onTap: onTap,
           ),
         ),
-        trailing: trailing,
-        onTap: onTap,
       ),
     );
   }

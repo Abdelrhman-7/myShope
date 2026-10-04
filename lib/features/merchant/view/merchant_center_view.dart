@@ -86,6 +86,16 @@ class MerchantCenterView extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('مركز التاجر'),
           centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
         ),
         body: Center(
           child: Padding(
@@ -147,9 +157,26 @@ class MerchantCenterView extends ConsumerWidget {
             floating: false,
             pinned: true,
             centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.white),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
+            ),
+            title: const Text(
+              'مركز التاجر',
+              style: TextStyle(
+                color: AppColors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -161,7 +188,12 @@ class MerchantCenterView extends ConsumerWidget {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xl,
+                      AppSpacing.lg,
+                      AppSpacing.md,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,32 +210,20 @@ class MerchantCenterView extends ConsumerWidget {
                               child: const Icon(
                                 Icons.storefront_rounded,
                                 color: AppColors.white,
-                                size: 32,
+                                size: 28,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.md),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'مركز التاجر 🏪',
-                                  style: AppTextStyles.titleLarge.copyWith(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  profile?.fullName ?? 'تاجر',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color:
-                                        AppColors.white.withValues(alpha: 0.85),
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              profile?.fullName ?? 'تاجر',
+                              style: AppTextStyles.titleMedium.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.xs + 2),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.sm,
@@ -227,12 +247,6 @@ class MerchantCenterView extends ConsumerWidget {
                   ),
                 ),
               ),
-              title: const Text(
-                'مركز التاجر',
-                style: TextStyle(color: AppColors.white),
-              ),
-              titlePadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
           ),
 

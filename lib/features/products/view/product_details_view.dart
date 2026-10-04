@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/config/supabase_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,12 +9,13 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_providers.dart';
 import '../../../core/utils/responsive.dart';
 import '../../cart/controller/cart_controller.dart';
+import '../../cart/models/cart_item_model.dart';
 import '../../favorites/controller/favorites_controller.dart';
 import '../models/product_model.dart';
 import '../models/product_image_model.dart';
 
 final productDetailsFutureProvider =
-    FutureProvider.family<ProductModel?, String>((ref, productId) async {
+    FutureProvider.family<ProductModel?, int>((ref, productId) async {
   final response = await supabase
       .from('products')
       .select()
@@ -25,7 +27,7 @@ final productDetailsFutureProvider =
 });
 
 final productImagesFutureProvider =
-    FutureProvider.family<List<ProductImageModel>, String>(
+    FutureProvider.family<List<ProductImageModel>, int>(
         (ref, productId) async {
   final response = await supabase
       .from('product_images')
@@ -39,7 +41,7 @@ final productImagesFutureProvider =
 });
 
 class ProductDetailsView extends ConsumerStatefulWidget {
-  final String productId;
+  final int productId;
 
   const ProductDetailsView({
     super.key,
@@ -82,10 +84,18 @@ class _ProductDetailsViewState extends ConsumerState<ProductDetailsView> {
               isFav ? Icons.favorite : Icons.favorite_border,
               color: isFav ? AppColors.favorite : null,
             ),
-            onPressed: () {
-              ref
+            onPressed: () async {
+              final err = await ref
                   .read(favoritesProvider.notifier)
                   .toggleFavorite(widget.productId);
+              if (err != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(err),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -442,7 +452,7 @@ class _ProductDetailsViewState extends ConsumerState<ProductDetailsView> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.sm),
 
                       // Add to Cart Button
                       Expanded(
@@ -459,25 +469,89 @@ class _ProductDetailsViewState extends ConsumerState<ProductDetailsView> {
                             ),
                           ),
                           onPressed: product.inStock
-                              ? () {
-                                  ref.read(cartProvider.notifier).addToCart(
+                              ? () async {
+                                  final err = await ref
+                                      .read(cartProvider.notifier)
+                                      .addToCart(
                                         product.id,
                                         quantity: _quantity,
                                       );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        loc.translate('products.added_to_cart'),
+
+                                  if (!context.mounted) return;
+                                  if (err != null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(err),
+                                        backgroundColor: AppColors.error,
                                       ),
-                                      backgroundColor: AppColors.success,
-                                    ),
-                                  );
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          loc.translate('products.added_to_cart'),
+                                        ),
+                                        backgroundColor: AppColors.success,
+                                      ),
+                                    );
+                                  }
                                 }
                               : null,
-                          icon: const Icon(Icons.add_shopping_cart),
+                          icon: const Icon(Icons.add_shopping_cart, size: 18),
                           label: Text(
                             loc.translate('products.add_to_cart'),
-                            style: AppTextStyles.labelLarge.copyWith(
+                            style: AppTextStyles.labelMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+
+                      // Buy Now Button
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                            foregroundColor: AppColors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
+                            ),
+                          ),
+                          onPressed: product.inStock
+                              ? () {
+                                  final userId = supabase.auth.currentUser?.id;
+                                  if (userId == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('يرجى تسجيل الدخول أولاً للشراء'),
+                                        backgroundColor: AppColors.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  final buyNowItem = CartItemModel(
+                                    id: 'buynow_${DateTime.now().millisecondsSinceEpoch}',
+                                    userId: userId,
+                                    productId: product.id,
+                                    quantity: _quantity,
+                                    product: product,
+                                  );
+
+                                  context.push('/checkout', extra: {
+                                    'buyNowItem': buyNowItem,
+                                  });
+                                }
+                              : null,
+                          icon: const Icon(Icons.bolt, size: 18),
+                          label: Text(
+                            'شراء الآن',
+                            style: AppTextStyles.labelMedium.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),

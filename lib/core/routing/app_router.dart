@@ -22,6 +22,12 @@ import '../../features/admin/view/admin_dashboard_view.dart';
 import '../../features/admin/view/admin_products_view.dart';
 import '../../features/admin/view/admin_orders_view.dart';
 import '../../features/admin/view/admin_customers_view.dart';
+import '../../features/admin/view/admin_merchants_view.dart';
+import '../../features/admin/view/admin_categories_view.dart';
+import '../../features/admin/view/admin_advertisements_view.dart';
+import '../../features/admin/view/admin_sales_view.dart';
+import '../../features/admin/view/admin_statistics_view.dart';
+import '../../features/admin/view/admin_settings_view.dart';
 import '../../features/splash/view/splash_view.dart';
 import '../../features/merchant/view/merchant_center_view.dart';
 
@@ -34,7 +40,7 @@ class AppRouter {
   static final GlobalKey<NavigatorState> _shellNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'shell');
 
-  // ─── Route names ──────────────────────────────────────────────
+  // ─── Route names ───────────────────────────────────────────────────
   static const String splash = '/';
   static const String roleSelection = '/role-selection';
   static const String login = '/login';
@@ -53,26 +59,36 @@ class AppRouter {
   static const String orderDetails = '/orders/:orderId';
   static const String addresses = '/addresses';
   static const String points = '/points';
+
+  // Admin
   static const String admin = '/admin';
-  static const String adminDashboard = '/admin'; // alias used in routing docs
+  static const String adminDashboard = '/admin';
   static const String adminProducts = '/admin/products';
   static const String adminOrders = '/admin/orders';
   static const String adminCustomers = '/admin/customers';
+  static const String adminMerchants = '/admin/merchants';
+  static const String adminCategories = '/admin/categories';
+  static const String adminAdvertisements = '/admin/advertisements';
+  static const String adminSales = '/admin/sales';
+  static const String adminStatistics = '/admin/statistics';
+  static const String adminSettings = '/admin/settings';
+
+  // Merchant
   static const String merchantCenter = '/merchant';
-  static const String merchantDashboard = '/merchant'; // alias used in routing docs
+  static const String merchantDashboard = '/merchant';
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: splash,
     debugLogDiagnostics: false,
     routes: [
-      // ─── Splash ─────────────────────────────────────────
+      // ─── Splash ────────────────────────────────────────────
       GoRoute(
         path: splash,
         builder: (context, state) => const SplashView(),
       ),
 
-      // ─── Auth Routes ───────────────────────────────────
+      // ─── Auth Routes ───────────────────────────────────────
       GoRoute(
         path: roleSelection,
         builder: (context, state) => const RoleSelectionView(),
@@ -90,7 +106,7 @@ class AppRouter {
         builder: (context, state) => const ForgotPasswordView(),
       ),
 
-      // ─── Main App Shell (with bottom nav) ──────────────
+      // ─── Main App Shell (with bottom nav) ──────────────────
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => HomeShell(child: child),
@@ -128,7 +144,7 @@ class AppRouter {
         ],
       ),
 
-      // ─── Detail Routes ─────────────────────────────────
+      // ─── Detail Routes ─────────────────────────────────────
       GoRoute(
         path: categoryProducts,
         builder: (context, state) => CategoryProductsView(
@@ -138,7 +154,7 @@ class AppRouter {
       GoRoute(
         path: productDetails,
         builder: (context, state) => ProductDetailsView(
-          productId: state.pathParameters['productId']!,
+          productId: int.parse(state.pathParameters['productId']!),
         ),
       ),
       GoRoute(
@@ -147,7 +163,9 @@ class AppRouter {
       ),
       GoRoute(
         path: checkout,
-        builder: (context, state) => const CheckoutView(),
+        builder: (context, state) => CheckoutView(
+          extra: state.extra as Map<String, dynamic>?,
+        ),
       ),
       GoRoute(
         path: orders,
@@ -168,7 +186,7 @@ class AppRouter {
         builder: (context, state) => const PointsView(),
       ),
 
-      // ─── Admin Routes ──────────────────────────────────
+      // ─── Admin Routes ──────────────────────────────────────
       GoRoute(
         path: admin,
         builder: (context, state) => const AdminDashboardView(),
@@ -185,8 +203,32 @@ class AppRouter {
         path: adminCustomers,
         builder: (context, state) => const AdminCustomersView(),
       ),
+      GoRoute(
+        path: adminMerchants,
+        builder: (context, state) => const AdminMerchantsView(),
+      ),
+      GoRoute(
+        path: adminCategories,
+        builder: (context, state) => const AdminCategoriesView(),
+      ),
+      GoRoute(
+        path: adminAdvertisements,
+        builder: (context, state) => const AdminAdvertisementsView(),
+      ),
+      GoRoute(
+        path: adminSales,
+        builder: (context, state) => const AdminSalesView(),
+      ),
+      GoRoute(
+        path: adminStatistics,
+        builder: (context, state) => const AdminStatisticsView(),
+      ),
+      GoRoute(
+        path: adminSettings,
+        builder: (context, state) => const AdminSettingsView(),
+      ),
 
-      // ─── Merchant Routes ────────────────────────────────
+      // ─── Merchant Routes ────────────────────────────────────
       GoRoute(
         path: merchantCenter,
         builder: (context, state) => const MerchantCenterView(),
@@ -194,4 +236,3 @@ class AppRouter {
     ],
   );
 }
-

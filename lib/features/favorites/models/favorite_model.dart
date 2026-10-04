@@ -4,7 +4,7 @@ import '../../products/models/product_model.dart';
 class FavoriteModel {
   final String id;
   final String userId;
-  final String productId;
+  final int productId;
   final DateTime? createdAt;
 
   // Joined product data
@@ -22,7 +22,7 @@ class FavoriteModel {
     return FavoriteModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      productId: json['product_id'] as String,
+      productId: (json['product_id'] as num).toInt(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,8 +25,12 @@ class LoginView extends ConsumerStatefulWidget {
 class _LoginViewState extends ConsumerState<LoginView> {
   final _formKey = GlobalKey<FormState>();
 
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController(
+    text: kDebugMode ? 'abdo@gmail.com' : '',
+  );
+  final _passwordController = TextEditingController(
+    text: kDebugMode ? '01008765502' : '',
+  );
 
   bool _isLoading = false;
   bool _obscurePassword = true;

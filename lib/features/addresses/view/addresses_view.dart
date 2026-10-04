@@ -205,7 +205,6 @@ class _AddressesViewState extends ConsumerState<AddressesView> {
                   return Container(
                     margin: const EdgeInsets.only(bottom: AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(
                         color: addr.isDefault
@@ -216,7 +215,11 @@ class _AddressesViewState extends ConsumerState<AddressesView> {
                         width: addr.isDefault ? 1.5 : 1,
                       ),
                     ),
-                    child: ListTile(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd - 1),
+                      child: Material(
+                        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                        child: ListTile(
                       contentPadding: const EdgeInsets.all(AppSpacing.md),
                       leading: Icon(
                         addr.isDefault
@@ -286,6 +289,8 @@ class _AddressesViewState extends ConsumerState<AddressesView> {
                               .read(addressesProvider.notifier)
                               .deleteAddress(addr.id);
                         },
+                      ),
+                        ),
                       ),
                     ),
                   );

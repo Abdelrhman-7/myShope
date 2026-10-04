@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/config/supabase_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
@@ -91,18 +92,30 @@ class OrderDetailsView extends ConsumerWidget {
                           ),
                         const SizedBox(height: AppSpacing.md),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${loc.translate('orders.status')}: ',
-                              style: AppTextStyles.bodyMedium,
+                            Row(
+                              children: [
+                                Text(
+                                  '${loc.translate('orders.status')}: ',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
+                                Text(
+                                  loc.translate('orders.status_${order.status}'),
+                                  style: AppTextStyles.labelLarge.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              loc.translate('orders.status_${order.status}'),
-                              style: AppTextStyles.labelLarge.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
+                            if (order.paymentMethod != null)
+                              Text(
+                                order.paymentMethod == 'visa' ? '💳 فيزا (مدفوع)' : '💵 دفع عند الاستلام',
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: AppColors.grey500,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ],
@@ -272,6 +285,34 @@ class OrderDetailsView extends ConsumerWidget {
                           isBold: true,
                         ),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ─── Go to Home Button ───────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                      ),
+                      onPressed: () => context.go('/home'),
+                      icon: const Icon(Icons.home_rounded),
+                      label: Text(
+                        loc.translate('order_success.go_home'),
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
 

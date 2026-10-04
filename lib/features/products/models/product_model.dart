@@ -1,7 +1,8 @@
 /// Product model matching the `products` table in Supabase.
 class ProductModel {
-  final String id;
-  final String categoryId;
+  final int id;
+  final int categoryId;
+  final String? merchantId;
   final String nameAr;
   final String nameEn;
   final String? descriptionAr;
@@ -20,6 +21,7 @@ class ProductModel {
   const ProductModel({
     required this.id,
     required this.categoryId,
+    this.merchantId,
     required this.nameAr,
     required this.nameEn,
     this.descriptionAr,
@@ -52,28 +54,38 @@ class ProductModel {
   bool get isLowStock => stockQuantity > 0 && stockQuantity <= minStock;
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final rawNameAr = json['name_ar'] as String?;
+    final rawNameEn = json['name_en'] as String?;
+    final nameArVal = (rawNameAr != null && rawNameAr.isNotEmpty)
+        ? rawNameAr
+        : (rawNameEn ?? '');
+    final nameEnVal = (rawNameEn != null && rawNameEn.isNotEmpty)
+        ? rawNameEn
+        : nameArVal;
+
     return ProductModel(
-      id: json['id'] as String,
-      categoryId: json['category_id'] as String,
-      nameAr: json['name_ar'] as String? ?? '',
-      nameEn: json['name_en'] as String? ?? '',
+      id: (json['id'] as num).toInt(),
+      categoryId: (json['category_id'] as num?)?.toInt() ?? 0,
+      merchantId: json['merchant_id'] as String?,
+      nameAr: nameArVal,
+      nameEn: nameEnVal,
       descriptionAr: json['description_ar'] as String?,
       descriptionEn: json['description_en'] as String?,
       sku: json['sku'] as String?,
-      price: (json['price'] as num).toDouble(),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
       oldPrice: json['old_price'] != null
           ? (json['old_price'] as num).toDouble()
           : null,
-      stockQuantity: json['stock_quantity'] as int? ?? 0,
-      minStock: json['min_stock'] as int? ?? 0,
+      stockQuantity: (json['stock_quantity'] as num?)?.toInt() ?? 0,
+      minStock: (json['min_stock'] as num?)?.toInt() ?? 0,
       imageUrl: json['image_url'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       isFeatured: json['is_featured'] as bool? ?? false,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.tryParse(json['created_at'] as String)
           : null,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.tryParse(json['updated_at'] as String)
           : null,
     );
   }
@@ -81,6 +93,7 @@ class ProductModel {
   Map<String, dynamic> toJson() {
     return {
       'category_id': categoryId,
+      'merchant_id': merchantId,
       'name_ar': nameAr,
       'name_en': nameEn,
       'description_ar': descriptionAr,
@@ -97,7 +110,8 @@ class ProductModel {
   }
 
   ProductModel copyWith({
-    String? categoryId,
+    int? categoryId,
+    String? merchantId,
     String? nameAr,
     String? nameEn,
     String? descriptionAr,
@@ -114,6 +128,7 @@ class ProductModel {
     return ProductModel(
       id: id,
       categoryId: categoryId ?? this.categoryId,
+      merchantId: merchantId ?? this.merchantId,
       nameAr: nameAr ?? this.nameAr,
       nameEn: nameEn ?? this.nameEn,
       descriptionAr: descriptionAr ?? this.descriptionAr,

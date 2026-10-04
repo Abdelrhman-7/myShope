@@ -2,7 +2,7 @@
 class OrderItemModel {
   final String id;
   final String orderId;
-  final String productId;
+  final int productId;
   final String productName;
   final int quantity;
   final double unitPrice;
@@ -24,7 +24,7 @@ class OrderItemModel {
     return OrderItemModel(
       id: json['id'] as String,
       orderId: json['order_id'] as String,
-      productId: json['product_id'] as String,
+      productId: (json['product_id'] as num).toInt(),
       productName: json['product_name'] as String? ?? '',
       quantity: json['quantity'] as int? ?? 1,
       unitPrice: (json['unit_price'] as num?)?.toDouble() ?? 0,

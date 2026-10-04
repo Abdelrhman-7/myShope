@@ -8,11 +8,14 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/app_providers.dart';
 import '../../../core/utils/responsive.dart';
 import '../../cart/controller/cart_controller.dart';
+import '../../cart/models/cart_item_model.dart';
 import '../../orders/controller/orders_controller.dart';
 import '../../points/controller/points_controller.dart';
 
 class CheckoutView extends ConsumerStatefulWidget {
-  const CheckoutView({super.key});
+  final Map<String, dynamic>? extra;
+
+  const CheckoutView({super.key, this.extra});
 
   @override
   ConsumerState<CheckoutView> createState() => _CheckoutViewState();
@@ -25,8 +28,16 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
   final _addressController = TextEditingController();
   final _notesController = TextEditingController();
 
+  // Visa card controllers
+  final _cardNumberController = TextEditingController();
+  final _expiryController = TextEditingController();
+  final _cvvController = TextEditingController();
+
+  String _selectedPaymentMethod = 'cash_on_delivery'; // 'cash_on_delivery' or 'visa'
   bool _usePoints = false;
   bool _isSubmitting = false;
+
+  CartItemModel? _buyNowItem;
 
   @override
   void initState() {
@@ -36,6 +47,10 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
       _nameController.text = profile.fullName ?? '';
       _phoneController.text = profile.phone ?? '';
     }
+
+    if (widget.extra != null && widget.extra!['buyNowItem'] != null) {
+      _buyNowItem = widget.extra!['buyNowItem'] as CartItemModel;
+    }
   }
 
   @override
@@ -44,6 +59,9 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     _phoneController.dispose();
     _addressController.dispose();
     _notesController.dispose();
+    _cardNumberController.dispose();
+    _expiryController.dispose();
+    _cvvController.dispose();
     super.dispose();
   }
 
@@ -53,11 +71,15 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final padding = Responsive.getHorizontalPadding(context);
 
-    final cartItems = ref.watch(cartProvider).value ?? [];
-    final subtotal = ref.read(cartProvider.notifier).subtotal;
-    final userPoints = ref.watch(userPointsBalanceProvider);
+    final List<CartItemModel> items = _buyNowItem != null
+        ? [_buyNowItem!]
+        : (ref.watch(cartProvider).value ?? []);
 
-    // Points conversion: e.g. 100 points = 10 EGP discount
+    final double subtotal = _buyNowItem != null
+        ? _buyNowItem!.lineTotal
+        : ref.read(cartProvider.notifier).subtotal;
+
+    final userPoints = ref.watch(userPointsBalanceProvider);
     final pointsDiscount = _usePoints ? (userPoints * 0.1) : 0.0;
     const deliveryFee = 30.0;
     final total = (subtotal - pointsDiscount + deliveryFee).clamp(0.0, double.infinity);
@@ -75,6 +97,61 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ─── Products Summary ───────────────────────────
+                Text(
+                  'ملخص المنتجات',
+                  style: AppTextStyles.titleLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                    ),
+                  ),
+                  child: Column(
+                    children: items.map((item) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${item.quantity}x',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                item.product?.nameAr ?? '',
+                                style: AppTextStyles.bodyMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '${item.lineTotal.toStringAsFixed(0)} ${loc.translate('common.currency')}',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // ─── Address & Delivery Info ─────────────────────
                 Text(
                   loc.translate('addresses.title'),
                   style: AppTextStyles.titleLarge.copyWith(
@@ -131,6 +208,157 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                 ),
 
                 const Divider(height: AppSpacing.xxl),
+
+                // ─── Payment Methods ────────────────────────────
+                Text(
+                  'طريقة الدفع',
+                  style: AppTextStyles.titleLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd - 1),
+                    child: Material(
+                      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                      child: Column(
+                        children: [
+                          RadioListTile<String>(
+                            value: 'cash_on_delivery',
+                            groupValue: _selectedPaymentMethod,
+                            activeColor: AppColors.primary,
+                            title: const Row(
+                              children: [
+                                Icon(Icons.payments_outlined, color: AppColors.success),
+                                SizedBox(width: AppSpacing.sm),
+                                Flexible(
+                                  child: Text(
+                                    'الدفع عند الاستلام (Cash on Delivery)',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onChanged: (v) {
+                              if (v != null) setState(() => _selectedPaymentMethod = v);
+                            },
+                          ),
+                          const Divider(height: 1),
+                          RadioListTile<String>(
+                            value: 'visa',
+                            groupValue: _selectedPaymentMethod,
+                            activeColor: AppColors.primary,
+                            title: const Row(
+                              children: [
+                                Icon(Icons.credit_card_rounded, color: AppColors.primary),
+                                SizedBox(width: AppSpacing.sm),
+                                Flexible(
+                                  child: Text(
+                                    'بطاقة ائتمانية / فيزا (Visa / MasterCard)',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onChanged: (v) {
+                              if (v != null) setState(() => _selectedPaymentMethod = v);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // Visa card inputs if Visa selected
+                if (_selectedPaymentMethod == 'visa') ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'بيانات الكارت 💳',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        TextFormField(
+                          controller: _cardNumberController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'رقم البطاقة (16 رقم)',
+                            prefixIcon: Icon(Icons.credit_card),
+                          ),
+                          validator: (v) {
+                            if (_selectedPaymentMethod == 'visa' && (v == null || v.length < 16)) {
+                              return 'يرجى إدخال رقم بطاقة صحيح';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _expiryController,
+                                keyboardType: TextInputType.datetime,
+                                decoration: const InputDecoration(
+                                  labelText: 'MM/YY',
+                                  prefixIcon: Icon(Icons.date_range),
+                                ),
+                                validator: (v) {
+                                  if (_selectedPaymentMethod == 'visa' && (v == null || v.isEmpty)) {
+                                    return 'مطلوب';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _cvvController,
+                                keyboardType: TextInputType.number,
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'CVV',
+                                  prefixIcon: Icon(Icons.lock_outline),
+                                ),
+                                validator: (v) {
+                                  if (_selectedPaymentMethod == 'visa' && (v == null || v.length < 3)) {
+                                    return 'مطلوب';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
 
                 // Points discount toggle
                 if (userPoints > 0) ...[
@@ -275,7 +503,7 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                             BorderRadius.circular(AppSpacing.radiusMd),
                       ),
                     ),
-                    onPressed: _isSubmitting || cartItems.isEmpty
+                    onPressed: _isSubmitting || items.isEmpty
                         ? null
                         : () async {
                             if (!_formKey.currentState!.validate()) return;
@@ -284,7 +512,7 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                             final messenger = ScaffoldMessenger.of(context);
                             final nav = GoRouter.of(context);
 
-                            final orderId = await ref
+                            final result = await ref
                                 .read(ordersProvider.notifier)
                                 .createOrder(
                                   customerName: _nameController.text.trim(),
@@ -295,26 +523,26 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                                       : null,
                                   pointsUsed: _usePoints ? userPoints : 0,
                                   discount: pointsDiscount,
+                                  paymentMethod: _selectedPaymentMethod,
+                                  overrideItems: _buyNowItem != null ? [_buyNowItem!] : null,
                                 );
 
                             if (!mounted) return;
                             setState(() => _isSubmitting = false);
 
-                            if (orderId != null) {
+                            if (result.isSuccess) {
                               messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    loc.translate('common.success'),
-                                  ),
+                                const SnackBar(
+                                  content: Text('تم إرسال الطلب بنجاح 🎉'),
                                   backgroundColor: AppColors.success,
                                 ),
                               );
-                              nav.go('/orders/$orderId');
+                              nav.go('/orders/${result.orderId}');
                             } else {
                               messenger.showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    loc.translate('common.error'),
+                                    result.errorMessage ?? 'فشل إنشاء الطلب',
                                   ),
                                   backgroundColor: AppColors.error,
                                 ),
@@ -331,7 +559,7 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                             ),
                           )
                         : Text(
-                            loc.translate('cart.checkout'),
+                            'تأكيد الطلب',
                             style: AppTextStyles.labelLarge.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -347,4 +575,3 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
     );
   }
 }
-

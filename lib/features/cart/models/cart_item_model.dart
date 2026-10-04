@@ -4,7 +4,7 @@ import '../../products/models/product_model.dart';
 class CartItemModel {
   final String id;
   final String userId;
-  final String productId;
+  final int productId;
   final int quantity;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -29,7 +29,7 @@ class CartItemModel {
     return CartItemModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      productId: json['product_id'] as String,
+      productId: (json['product_id'] as num).toInt(),
       quantity: json['quantity'] as int? ?? 1,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)

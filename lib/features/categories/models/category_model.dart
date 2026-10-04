@@ -26,19 +26,19 @@ class CategoryModel {
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      id: json['id'] as String,
-      nameAr: json['name_ar'] as String? ?? '',
-      nameEn: json['name_en'] as String? ?? '',
-      descriptionAr: json['description_ar'] as String?,
-      descriptionEn: json['description_en'] as String?,
-      imageUrl: json['image_url'] as String?,
+      id: json['id']?.toString() ?? '',
+      nameAr: json['name_ar']?.toString() ?? '',
+      nameEn: json['name_en']?.toString() ?? '',
+      descriptionAr: json['description_ar']?.toString(),
+      descriptionEn: json['description_en']?.toString(),
+      imageUrl: json['image_url']?.toString(),
       isActive: json['is_active'] as bool? ?? true,
-      sortOrder: json['sort_order'] as int? ?? 0,
+      sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.parse(json['created_at'].toString())
           : null,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? DateTime.parse(json['updated_at'].toString())
           : null,
     );
   }

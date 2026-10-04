@@ -199,10 +199,18 @@ class ProductCard extends ConsumerWidget {
                         color: isFav ? AppColors.favorite : AppColors.grey500,
                         size: 20,
                       ),
-                      onPressed: () {
-                        ref
+                      onPressed: () async {
+                        final err = await ref
                             .read(favoritesProvider.notifier)
                             .toggleFavorite(product.id);
+                        if (err != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(err),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),
@@ -264,19 +272,30 @@ class ProductCard extends ConsumerWidget {
                             InkWell(
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusSm),
-                              onTap: () {
-                                ref
+                              onTap: () async {
+                                final err = await ref
                                     .read(cartProvider.notifier)
                                     .addToCart(product.id);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      loc.translate('products.added_to_cart'),
+
+                                if (!context.mounted) return;
+                                if (err != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(err),
+                                      backgroundColor: AppColors.error,
                                     ),
-                                    duration: const Duration(seconds: 1),
-                                    backgroundColor: AppColors.success,
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        loc.translate('products.added_to_cart'),
+                                      ),
+                                      duration: const Duration(seconds: 1),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+                                }
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(AppSpacing.xs + 2),

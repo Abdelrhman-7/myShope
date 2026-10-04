@@ -63,7 +63,8 @@ class AppLogger {
         if (errString.contains('SocketException') ||
             errString.contains('Failed host lookup')) {
           buffer.writeln(
-              '$color🔴 Type       : SocketException (DNS / Network Error)$_reset');
+            '$color🔴 Type       : SocketException (DNS / Network Error)$_reset',
+          );
         }
       }
     }
@@ -106,7 +107,11 @@ class AppLogger {
   }
 
   /// Success level log
-  static void success(String message, {String? tag, Map<String, dynamic>? data}) {
+  static void success(
+    String message, {
+    String? tag,
+    Map<String, dynamic>? data,
+  }) {
     _log(
       header: '✅ SUCCESS ${tag != null ? "[$tag]" : ""}',
       color: _green,
@@ -116,7 +121,11 @@ class AppLogger {
   }
 
   /// Warning level log
-  static void warning(String message, {String? tag, Map<String, dynamic>? data}) {
+  static void warning(
+    String message, {
+    String? tag,
+    Map<String, dynamic>? data,
+  }) {
     _log(
       header: '⚠️ WARNING ${tag != null ? "[$tag]" : ""}',
       color: _yellow,
@@ -163,9 +172,7 @@ class AppLogger {
     final header = isErr ? '❌ AUTH ERROR' : '🔐 AUTHENTICATION';
     final color = isErr ? _red : _purple;
 
-    final map = <String, dynamic>{
-      '📌 Event': event,
-    };
+    final map = <String, dynamic>{'📌 Event': event};
     if (email != null) map['📧 Email'] = email;
     if (userId != null) map['👤 User ID'] = userId;
     if (role != null) map['🎭 Role'] = role;
@@ -231,12 +238,7 @@ class AppLogger {
     map['✅ Result'] = isErr ? 'FAILED' : 'SUCCESS';
     if (data != null) map.addAll(data);
 
-    _log(
-      header: header,
-      color: color,
-      items: map,
-      error: error,
-    );
+    _log(header: header, color: color, items: map, error: error);
   }
 
   /// Database Logger for Supabase query operations
@@ -261,11 +263,125 @@ class AppLogger {
     map['✅ Result'] = isErr ? 'FAILED' : 'SUCCESS';
     if (data != null) map.addAll(data);
 
+    _log(header: header, color: color, items: map, error: error);
+  }
+
+  // ─── Domain Specific Action Loggers ──────────────────────────────
+
+  /// Log Cart Actions (ADD_TO_CART_SUCCESS, ADD_TO_CART_FAILED)
+  static void logCart(
+    String event, {
+    required String userId,
+    required int productId,
+    int? quantity,
+    Object? error,
+    Duration? duration,
+  }) {
+    final isSuccess = event.endsWith('SUCCESS');
     _log(
-      header: header,
-      color: color,
-      items: map,
+      header: isSuccess ? '🛒 ADD_TO_CART_SUCCESS' : '🛒 ADD_TO_CART_FAILED',
+      color: isSuccess ? _green : _red,
+      items: {
+        'USER ID': userId,
+        'PRODUCT ID': productId,
+        if (quantity != null) 'QUANTITY': quantity,
+        if (duration != null) 'DURATION': '${duration.inMilliseconds} ms',
+      },
       error: error,
+    );
+  }
+
+  /// Log Favorite Actions (FAVORITE_ADDED, FAVORITE_REMOVED)
+  static void logFavorite(
+    String event, {
+    required String userId,
+    required int productId,
+    Object? error,
+  }) {
+    final isAdded = event.contains('ADDED');
+    _log(
+      header: isAdded ? '❤️ FAVORITE_ADDED' : '💔 FAVORITE_REMOVED',
+      color: isAdded ? _magenta : _yellow,
+      items: {'USER ID': userId, 'PRODUCT ID': productId},
+      error: error,
+    );
+  }
+
+  /// Log Order Actions (ORDER_CREATED, ORDER_CREATE_FAILED)
+  static void logOrder(
+    String event, {
+    required String userId,
+    String? orderId,
+    int? quantity,
+    String? paymentMethod,
+    String? orderStatus,
+    Object? error,
+    Duration? duration,
+  }) {
+    final isSuccess = event == 'ORDER_CREATED';
+    _log(
+      header: isSuccess ? '📦 ORDER_CREATED' : '❌ ORDER_CREATE_FAILED',
+      color: isSuccess ? _green : _red,
+      items: {
+        'USER ID': userId,
+        if (orderId != null) 'ORDER ID': orderId,
+        if (quantity != null) 'QUANTITY': quantity,
+        // ignore: use_null_aware_elements
+        if (paymentMethod != null) 'PAYMENT METHOD': paymentMethod,
+        if (orderStatus != null) 'ORDER STATUS': orderStatus,
+        if (duration != null) 'DURATION': '${duration.inMilliseconds} ms',
+      },
+      error: error,
+    );
+  }
+
+  /// Log Stock Updates (STOCK_UPDATED)
+  static void logStock({
+    required int productId,
+    required int oldStock,
+    required int newStock,
+  }) {
+    _log(
+      header: '📉 STOCK_UPDATED',
+      color: _cyan,
+      items: {
+        'PRODUCT ID': productId,
+        'OLD STOCK': oldStock,
+        'NEW STOCK': newStock,
+      },
+    );
+  }
+
+  /// Log Admin Actions (ADMIN_ORDER_ACCEPTED, ADMIN_ORDER_REJECTED)
+  static void logAdmin(
+    String event, {
+    required String orderId,
+    required String orderStatus,
+    Object? error,
+  }) {
+    final isAccepted = event == 'ADMIN_ORDER_ACCEPTED';
+    _log(
+      header: isAccepted ? '✅ ADMIN_ORDER_ACCEPTED' : '🚫 ADMIN_ORDER_REJECTED',
+      color: isAccepted ? _green : _red,
+      items: {'ORDER ID': orderId, 'ORDER STATUS': orderStatus},
+      error: error,
+    );
+  }
+
+  /// Log Notifications (NOTIFICATION_RECEIVED)
+  static void logNotification({
+    required String userId,
+    required String title,
+    String? orderId,
+  }) {
+    _log(
+      header: '🔔 NOTIFICATION_RECEIVED',
+      color: _brightBlue,
+      items: {
+        'USER ID': userId,
+        'TITLE': title,
+        if (orderId != null) 'ORDER ID': orderId,
+      },
     );
   }
 
